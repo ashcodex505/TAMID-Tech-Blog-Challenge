@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Set default background and text colors for dark mode */
+@layer base {
+  html {
+    @apply bg-[#202020] text-white;
+  }
+  
+  body {
+    @apply min-h-screen bg-[#202020] text-white;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  
+  /* Set scrollbar styles for dark mode */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-[#333333];
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-[#444444] rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-[#555555];
+  }
+}
+
+/* Custom components */
+@layer components {
+  .btn-primary {
+    @apply bg-tamid-blue hover:bg-tamid-blue-dark text-white font-medium py-2 px-4 rounded-md transition-all duration-200;
+  }
+  
+  .input-field {
+    @apply w-full bg-[#333333] border border-[#444444] rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-tamid-blue focus:border-transparent transition-all;
+  }
+  
+  .card {
+    @apply bg-[#2A2A2A] p-6 rounded-lg shadow-lg border border-[#444444] transition-all;
+  }
+}
