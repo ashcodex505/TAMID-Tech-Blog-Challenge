@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, User, Tag, ArrowLeft, MessageCircle, ThumbsUp, Share2 } from 'lucide-react';
-import axios from 'axios';
+import apiClient from '../lib/api';
 
 interface Post {
   _id: string;
@@ -28,7 +28,7 @@ const PostDetailPage: React.FC = () => {
     const fetchPost = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5001/api/posts/${id}`);
+        const response = await apiClient.get(`/posts/${id}`);
         setPost(response.data);
       } catch (err) {
         console.error('Error fetching post:', err);

@@ -1,23 +1,41 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuth } from '../context/auth/authProvider';
+import { supabase } from '../context/auth/supabaseClient';
 import { motion } from 'framer-motion';
 import { Home, FileText, PenSquare, LogOut, LogIn, UserPlus, User } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+  const { session, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login'); // Redirect to login after logout
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   // Check if a path is active
   const isActive = (path: string) => location.pathname === path;
+
+  // Show loading state if auth is still loading
+  if (loading) {
+    return (
+      <nav className="bg-[#2A2A2A] text-white p-4 shadow-md border-b border-[#444444]">
+        <div className="container mx-auto flex justify-between items-center">
+          <Link to="/" className="text-xl font-bold flex items-center group">
+            <span className="text-white group-hover:text-[#31B4EF] transition-colors">Tech</span>
+            <span className="text-[#31B4EF]">Blog</span>
+          </Link>
+          <div className="text-gray-400">Loading...</div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <motion.nav
@@ -40,7 +58,7 @@ const Navbar: React.FC = () => {
             <span className="hidden sm:inline">Home</span>
           </Link>
           
-          {isAuthenticated ? (
+          {session ? (
             <>
               <Link 
                 to="/my-posts" 
@@ -60,7 +78,9 @@ const Navbar: React.FC = () => {
               
               <div className="flex items-center border-l border-[#444444] pl-4 ml-1">
                 <User className="w-4 h-4 text-[#31B4EF] mr-2" />
-                <span className="text-gray-300 text-sm mr-3">{user?.name}</span>
+                <span className="text-gray-300 text-sm mr-3">
+                  {session.user?.user_metadata?.full_name || session.user?.email}
+                </span>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}

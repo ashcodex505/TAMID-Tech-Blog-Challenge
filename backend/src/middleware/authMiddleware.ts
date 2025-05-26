@@ -1,11 +1,5 @@
-import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
-import dotenv from 'dotenv';
-import supabase from '../utils/supabase';
-
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET;
+import { supabase } from '../utils/supabase';
 
 // Extend Express Request type to include 'user' property
 declare global {
@@ -13,17 +7,12 @@ declare global {
     interface Request {
       user?: {
         id: string;
-        name: string;
         email: string;
-        created_at: string;
-        updated_at: string;
+        name?: string;
+        user_metadata?: any;
       };
     }
   }
-}
-
-interface JwtPayload {
-  id: string;
 }
 
 export const protect = async (
@@ -41,29 +30,27 @@ export const protect = async (
       // Get token from header
       token = req.headers.authorization.split(' ')[1];
 
-      // Verify token
-      const decoded = jwt.verify(token, JWT_SECRET!) as JwtPayload;
-
-      // Get user from Supabase (excluding password)
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('id, name, email, created_at, updated_at')
-        .eq('id', decoded.id)
-        .single();
+      // Verify Supabase JWT token
+      const { data: { user }, error } = await supabase.auth.getUser(token);
 
       if (error || !user) {
-        return res.status(401).json({ message: 'Not authorized, user not found' });
+        return res.status(401).json({ message: 'Not authorized, invalid token' });
       }
 
-      // Attach user to the request object
-      req.user = user;
+      // Attach Supabase user to the request object
+      req.user = {
+        id: user.id,
+        email: user.email!,
+        name: user.user_metadata?.full_name || user.email,
+        user_metadata: user.user_metadata
+      };
 
       next();
     } catch (error) {
       console.error('Token verification failed:', error);
       return res.status(401).json({ message: 'Not authorized, token failed' });
     }
-  } else if (!token) {
+  } else {
     res.status(401).json({ message: 'Not authorized, no token' });
     return;
   }

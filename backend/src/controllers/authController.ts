@@ -1,144 +1,100 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-import bcrypt from 'bcrypt';
-import supabase from '../utils/supabase';
-
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  console.error('FATAL ERROR: JWT_SECRET is not defined.');
-  process.exit(1);
-}
-
-// Helper function to generate JWT
-const generateToken = (userId: string) => {
-  return jwt.sign({ id: userId }, JWT_SECRET!, {
-    expiresIn: '30d', // Token expires in 30 days
-  });
-};
+import { supabase } from '../utils/supabase';
 
 /**
- * @desc    Register a new user
- * @route   POST /api/auth/register
- * @access  Public
+ * @desc    Sync Supabase authenticated user with local database
+ * @route   POST /api/auth/sync-user
+ * @access  Private (requires Supabase JWT)
  */
-export const registerUser = async (req: Request, res: Response) => {
-  const { name, email, password } = req.body;
-
+export const syncSupabaseUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('email')
-      .eq('email', email)
-      .single();
-
-    if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+    if (!req.user) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const { id, email, name } = req.user;
 
-    // Current timestamp for created_at and updated_at
-    const now = new Date().toISOString();
-
-    // Insert user into Supabase
-    const { data: user, error } = await supabase
-      .from('users')
-      .insert([
-        { 
-          name, 
-          email, 
-          password: hashedPassword,
-          created_at: now,
-          updated_at: now
-        }
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    // Exclude password from the response
-    if (user) {
-      const { password: _, ...userResponse } = user;
-
-      res.status(201).json({
-        ...userResponse,
-        token: generateToken(user.id),
-      });
-    } else {
-      throw new Error('User creation failed');
-    }
-  } catch (error: any) {
-    console.error('Registration Error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
-  }
-};
-
-/**
- * @desc    Authenticate user & get token
- * @route   POST /api/auth/login
- * @access  Public
- */
-export const loginUser = async (req: Request, res: Response) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Please provide email and password' });
-  }
-
-  try {
-    // Find user by email
-    const { data: user, error } = await supabase
+    // Check if user already exists in our database
+    const { data: existingUser, error: fetchError } = await supabase
       .from('users')
       .select('*')
-      .eq('email', email)
+      .eq('id', id)
       .single();
 
-    if (error || !user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
+    let user;
 
-    // Check password
-    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (fetchError && fetchError.code === 'PGRST116') {
+      // User doesn't exist, create new user
+      const now = new Date().toISOString();
+      
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id,
+            email,
+            name: name || email,
+            created_at: now,
+            updated_at: now
+          }
+        ])
+        .select()
+        .single();
 
-    if (isPasswordMatch) {
-      // Exclude password from the response
-      const { password: _, ...userResponse } = user;
-
-      res.json({
-        ...userResponse,
-        token: generateToken(user.id),
-      });
+      if (insertError) {
+        throw insertError;
+      }
+      user = newUser;
+    } else if (fetchError) {
+      throw fetchError;
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      // User exists, update if needed
+      const updateData: any = { updated_at: new Date().toISOString() };
+      
+      if (existingUser.name !== name && name) {
+        updateData.name = name;
+      }
+
+      const { data: updatedUser, error: updateError } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw updateError;
+      }
+      user = updatedUser;
     }
-  } catch (error) {
-    console.error('Login Error:', error);
-    res.status(500).json({ message: 'Server error during login' });
+
+    res.status(200).json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+      role: 'user' // Default role
+    });
+  } catch (error: any) {
+    console.error('Sync user error:', error);
+    res.status(500).json({ message: 'Server error during user sync' });
   }
 };
 
 /**
- * @desc    Get current user profile (Example of a protected route)
+ * @desc    Get current user profile
  * @route   GET /api/auth/me
- * @access  Private
+ * @access  Private (requires Supabase JWT)
  */
-export const getMe = async (req: Request, res: Response) => {
-  // req.user should be populated by the authMiddleware
-  if (!req.user) {
-    return res.status(401).json({ message: 'Not authorized, user data missing' });
-  }
-
+export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Not authorized, user data missing' });
+      return;
+    }
+
     const { data: user, error } = await supabase
       .from('users')
       .select('id, name, email, created_at, updated_at')
@@ -146,10 +102,14 @@ export const getMe = async (req: Request, res: Response) => {
       .single();
 
     if (error || !user) {
-      return res.status(404).json({ message: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
+      return;
     }
 
-    res.status(200).json(user);
+    res.status(200).json({
+      ...user,
+      role: 'user' // Default role
+    });
   } catch (error) {
     console.error('Get User Error:', error);
     res.status(500).json({ message: 'Server error while fetching user data' });

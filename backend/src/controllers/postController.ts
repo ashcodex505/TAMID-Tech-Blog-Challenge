@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import supabase from '../utils/supabase';
+import { supabase } from '../utils/supabase';
 
 /**
  * Helper function to find or create tags
@@ -52,6 +52,7 @@ const findOrCreateTags = async (tagNames: string[]): Promise<string[]> => {
 export const createPost = async (req: Request, res: Response) => {
     const { title, content, tags, isPublic } = req.body;
     const userId = req.user?.id;
+   
 
     if (!userId) {
         return res.status(401).json({ message: 'User not authorized' });
@@ -63,14 +64,26 @@ export const createPost = async (req: Request, res: Response) => {
     try {
         // Current timestamp
         const now = new Date().toISOString();
+        //find user id from user email in users table 
+        const { data: user, error: userError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', req.user?.email)
+            .single();
+
+        if (userError) {   
+            throw userError;
+        }
+
         
+
         // Create post
         const { data: post, error } = await supabase
             .from('posts')
             .insert({
                 title,
                 content,
-                author_id: userId,
+                author_id: user.id,
                 is_public: isPublic !== undefined ? isPublic : true,
                 created_at: now,
                 updated_at: now

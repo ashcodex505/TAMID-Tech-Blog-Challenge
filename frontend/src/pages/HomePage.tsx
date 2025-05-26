@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../lib/api';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, Code, Tag, Users, TrendingUp, ChevronRight } from 'lucide-react';
@@ -13,7 +13,12 @@ interface Post {
     _id: string;
     name: string;
   } | null;
-  tags: string[];
+  tags: Array<{
+    tag: {
+      id: string;
+      name: string;
+    };
+  }>;
   createdAt: string;
   updatedAt: string;
   isPublic: boolean;
@@ -30,13 +35,13 @@ const HomePage: React.FC = () => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5001/api/posts/');
+        const response = await apiClient.get('/posts/');
         setPosts(response.data);
         
         // Extract all unique tags
         const tags = new Set<string>();
         response.data.forEach((post: Post) => {
-          post.tags.forEach(tag => tags.add(tag));
+          post.tags.forEach(tag => tags.add(tag.tag.name));
         });
         setAllTags(Array.from(tags));
       } catch (err) {
@@ -52,7 +57,7 @@ const HomePage: React.FC = () => {
 
   // Filter posts by tag if one is selected
   const filteredPosts = selectedTag 
-    ? posts.filter(post => post.tags.includes(selectedTag))
+    ? posts.filter(post => post.tags.some(t => t.tag.name === selectedTag))
     : posts;
 
   const clearTagFilter = () => setSelectedTag(null);
@@ -273,12 +278,12 @@ const HomePage: React.FC = () => {
                         {post.content.substring(0, 150)}...
                       </p>
                       <div className="flex flex-wrap gap-1 mb-3">
-                        {post.tags.map(tag => (
+                        {post.tags.map(t => (
                           <span 
-                            key={`${post._id}-${tag}`}
+                            key={`${post._id}-${t.tag.name}`}
                             className="inline-block bg-[#333333] rounded-md px-3 py-1 text-xs font-semibold text-gray-300"
                           >
-                            {tag}
+                            {t.tag.name}
                           </span>
                         ))}
                       </div>

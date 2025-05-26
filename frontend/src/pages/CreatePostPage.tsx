@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { PenSquare, Tag, Eye, Lock, ArrowLeft, Hash } from 'lucide-react';
-import axios from 'axios';
-import useAuthStore from '../store/authStore';
+import { PenSquare, Eye, Lock, ArrowLeft, Hash } from 'lucide-react';
+import apiClient from '../lib/api';
+import { useAuth } from '../context/auth/authProvider';
 
 interface FormData {
   title: string;
@@ -16,7 +16,7 @@ const CreatePostPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const isEditMode = Boolean(id);
   const navigate = useNavigate();
-  const token = useAuthStore(state => state.token);
+  const { session } = useAuth();
   
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -33,8 +33,15 @@ const CreatePostPage: React.FC = () => {
     setIsSubmitting(true);
     setError(null);
 
+    if (!session?.access_token) {
+      setError('You must be logged in to create a post');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const postData = {
+        user: session.user,
         title: formData.title,
         content: formData.content,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
@@ -42,13 +49,9 @@ const CreatePostPage: React.FC = () => {
       };
 
       if (isEditMode) {
-        await axios.put(`http://localhost:5001/api/posts/${id}`, postData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiClient.put(`/posts/${id}`, postData);
       } else {
-        await axios.post('http://localhost:5001/api/posts', postData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiClient.post('/posts', postData);
       }
 
       // Redirect to My Posts page

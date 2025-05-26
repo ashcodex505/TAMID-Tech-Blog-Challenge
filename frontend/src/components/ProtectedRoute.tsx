@@ -1,17 +1,25 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
+import { useAuth } from '../context/auth/authProvider';
 
 interface ProtectedRouteProps {
   children?: React.ReactNode; // Allow children to be passed if needed, but Outlet is preferred
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { session, loading } = useAuth();
 
-  if (!isAuthenticated) {
-    // User not authenticated, redirect to login page
-    // Using replace to avoid adding login page to history stack
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  // If no session, redirect to login
+  if (!session) {
     return <Navigate to="/login" replace />;
   }
 

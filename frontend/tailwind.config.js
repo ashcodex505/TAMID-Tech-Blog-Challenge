@@ -11,6 +11,7 @@ export default {
         'tamid-blue-dark': '#1A91C9',
         'tamid-light': '#FFFFFF',
         'tamid-dark': '#202020',
+        'bapred': '#DC2626', // Red color for the login page accent
         'tamid-gray': {
           100: '#F3F4F6',
           200: '#E5E7EB',

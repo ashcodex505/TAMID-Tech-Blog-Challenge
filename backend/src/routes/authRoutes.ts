@@ -1,13 +1,13 @@
-import express, { RequestHandler } from 'express';
-import { registerUser, loginUser, getMe } from '../controllers/authController';
+import express from 'express';
+import { syncSupabaseUser, getMe } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-router.post('/register', registerUser as RequestHandler);
-router.post('/login', loginUser as RequestHandler);
+// Route to sync/create user in database after Supabase authentication
 
-// Example of a protected route
-router.get('/me',  getMe as RequestHandler);
+
+// Protected route to get current user info
+router.get('/me', protect as any, getMe as any);
 
 export default router; 

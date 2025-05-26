@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Eye, Plus, FolderOpen, Lock, Filter } from 'lucide-react';
-import axios from 'axios';
-import useAuthStore from '../store/authStore';
+import apiClient from '../lib/api';
+import { useAuth } from '../context/auth/authProvider';
 
 interface Post {
   _id: string;
@@ -24,18 +24,20 @@ const MyPostsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'public' | 'private'>('all');
-  const token = useAuthStore(state => state.token);
+  const { session } = useAuth();
   
   useEffect(() => {
     const fetchMyPosts = async () => {
+      if (!session?.access_token) {
+        setError('Please log in to view your posts');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         // Assuming there's an API endpoint for fetching the current user's posts
-        const response = await axios.get('http://localhost:5001/api/posts/my-posts', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const response = await apiClient.get('/posts/my-posts');
         setPosts(response.data);
       } catch (err) {
         console.error('Error fetching posts:', err);
@@ -46,7 +48,7 @@ const MyPostsPage: React.FC = () => {
     };
 
     fetchMyPosts();
-  }, [token]);
+  }, [session]);
 
   const filteredPosts = filter === 'all' 
     ? posts 
@@ -55,12 +57,13 @@ const MyPostsPage: React.FC = () => {
   const handleDeletePost = async (postId: string) => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
     
+    if (!session?.access_token) {
+      alert('You must be logged in to delete posts');
+      return;
+    }
+    
     try {
-      await axios.delete(`http://localhost:5001/api/posts/${postId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      await apiClient.delete(`/posts/${postId}`);
       setPosts(posts.filter(post => post._id !== postId));
     } catch (err) {
       console.error('Error deleting post:', err);
