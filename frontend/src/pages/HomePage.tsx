@@ -12,7 +12,7 @@ interface Post {
   author: {
     _id: string;
     name: string;
-  };
+  } | null;
   tags: string[];
   createdAt: string;
   updatedAt: string;
@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('http://localhost:5001/api/posts/public');
+        const response = await axios.get('http://localhost:5001/api/posts/');
         setPosts(response.data);
         
         // Extract all unique tags
@@ -283,7 +283,7 @@ const HomePage: React.FC = () => {
                         ))}
                       </div>
                       <div className="flex justify-between items-center text-sm text-gray-500">
-                        <span>By {post.author.name}</span>
+                        <span>By {post.author?.name || 'Unknown Author'}</span>
                         <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                       </div>
                       <Link 
