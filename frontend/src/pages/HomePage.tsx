@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../lib/api';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Code, Tag, Users, TrendingUp, ChevronRight } from 'lucide-react';
+import { BookOpen, Code, Tag, Users, TrendingUp, ChevronRight, Zap, Globe, Smartphone, Database, Shield, Cpu, Lightbulb, Trophy } from 'lucide-react';
 import ImageGallery from '../components/ImageGallery';
 
 // Blog post interface
@@ -89,6 +89,45 @@ const HomePage: React.FC = () => {
     visible: { opacity: 1, transition: { duration: 0.6 } }
   };
 
+  // Function to get appropriate icon for each tag
+  const getTagIcon = (tagName: string) => {
+    const tag = tagName.toLowerCase();
+    if (tag.includes('programming') || tag.includes('code') || tag.includes('development')) return Code;
+    if (tag.includes('trend') || tag.includes('innovation') || tag.includes('future')) return TrendingUp;
+    if (tag.includes('community') || tag.includes('team') || tag.includes('collaboration')) return Users;
+    if (tag.includes('tutorial') || tag.includes('guide') || tag.includes('learn')) return BookOpen;
+    if (tag.includes('hackathon') || tag.includes('competition') || tag.includes('contest')) return Trophy;
+    if (tag.includes('web') || tag.includes('internet') || tag.includes('online')) return Globe;
+    if (tag.includes('mobile') || tag.includes('app') || tag.includes('ios') || tag.includes('android')) return Smartphone;
+    if (tag.includes('data') || tag.includes('database') || tag.includes('sql')) return Database;
+    if (tag.includes('security') || tag.includes('cyber') || tag.includes('privacy')) return Shield;
+    if (tag.includes('ai') || tag.includes('machine') || tag.includes('algorithm')) return Cpu;
+    if (tag.includes('startup') || tag.includes('innovation') || tag.includes('idea')) return Lightbulb;
+    if (tag.includes('performance') || tag.includes('speed') || tag.includes('optimization')) return Zap;
+    // Default icon
+    return Tag;
+  };
+
+  // Function to get post count for each tag
+  const getTagPostCount = (tagName: string) => {
+    return posts.filter(post => post.tags.some(t => t.tag.name === tagName)).length;
+  };
+
+  // Function to generate description for tags
+  const getTagDescription = (tagName: string, postCount: number) => {
+    const tag = tagName.toLowerCase();
+    if (tag.includes('hackathon')) return `Explore ${postCount} post${postCount !== 1 ? 's' : ''} about hackathons, competitions, and coding challenges`;
+    if (tag.includes('programming') || tag.includes('code')) return `Discover ${postCount} post${postCount !== 1 ? 's' : ''} about programming languages and coding techniques`;
+    if (tag.includes('tutorial')) return `Learn from ${postCount} tutorial${postCount !== 1 ? 's' : ''} and step-by-step guides`;
+    if (tag.includes('web')) return `Browse ${postCount} post${postCount !== 1 ? 's' : ''} about web development and technologies`;
+    if (tag.includes('mobile')) return `Check out ${postCount} post${postCount !== 1 ? 's' : ''} about mobile app development`;
+    if (tag.includes('ai') || tag.includes('machine')) return `Explore ${postCount} post${postCount !== 1 ? 's' : ''} about artificial intelligence and machine learning`;
+    if (tag.includes('data')) return `Dive into ${postCount} post${postCount !== 1 ? 's' : ''} about data science and analytics`;
+    if (tag.includes('security')) return `Learn from ${postCount} post${postCount !== 1 ? 's' : ''} about cybersecurity and privacy`;
+    // Default description
+    return `Explore ${postCount} post${postCount !== 1 ? 's' : ''} about ${tagName}`;
+  };
+
   return (
     <div className="min-h-screen bg-[#202020] text-white transition-colors duration-200">
       {/* Hero Section */}
@@ -142,51 +181,82 @@ const HomePage: React.FC = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-8 text-center">Explore Topics</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
-            >
-              <div className="mb-4 text-[#31B4EF]">
-                <Code className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Programming</h3>
-              <p className="text-gray-400">Coding tutorials, best practices, and language deep-dives</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
-            >
-              <div className="mb-4 text-[#31B4EF]">
-                <TrendingUp className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Technology Trends</h3>
-              <p className="text-gray-400">Latest developments and innovations in the tech world</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
-            >
-              <div className="mb-4 text-[#31B4EF]">
-                <Users className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Community</h3>
-              <p className="text-gray-400">Stories, interviews, and insights from the tech community</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
-            >
-              <div className="mb-4 text-[#31B4EF]">
-                <BookOpen className="w-10 h-10" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Tutorials</h3>
-              <p className="text-gray-400">Step-by-step guides to learn new skills and technologies</p>
-            </motion.div>
-          </div>
+          {allTags.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              {allTags.slice(0, 8).map(tag => {
+                const IconComponent = getTagIcon(tag);
+                const postCount = getTagPostCount(tag);
+                const description = getTagDescription(tag, postCount);
+                
+                return (
+                  <motion.div 
+                    key={tag}
+                    whileHover={{ y: -5 }}
+                    className="bg-[#333333] border border-[#444444] p-6 rounded-lg cursor-pointer hover:border-[#31B4EF] transition-colors duration-200"
+                    onClick={() => setSelectedTag(tag)}
+                  >
+                    <div className="mb-4 text-[#31B4EF]">
+                      <IconComponent className="w-10 h-10" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2 capitalize">{tag}</h3>
+                    <p className="text-gray-400 text-sm mb-3">{description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-[#31B4EF] font-medium">
+                        {postCount} post{postCount !== 1 ? 's' : ''}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-gray-500" />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
+              >
+                <div className="mb-4 text-[#31B4EF]">
+                  <Code className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Programming</h3>
+                <p className="text-gray-400">Coding tutorials, best practices, and language deep-dives</p>
+              </motion.div>
+              
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
+              >
+                <div className="mb-4 text-[#31B4EF]">
+                  <TrendingUp className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Technology Trends</h3>
+                <p className="text-gray-400">Latest developments and innovations in the tech world</p>
+              </motion.div>
+              
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
+              >
+                <div className="mb-4 text-[#31B4EF]">
+                  <Users className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Community</h3>
+                <p className="text-gray-400">Stories, interviews, and insights from the tech community</p>
+              </motion.div>
+              
+              <motion.div 
+                whileHover={{ y: -5 }}
+                className="bg-[#333333] border border-[#444444] p-6 rounded-lg"
+              >
+                <div className="mb-4 text-[#31B4EF]">
+                  <BookOpen className="w-10 h-10" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Tutorials</h3>
+                <p className="text-gray-400">Step-by-step guides to learn new skills and technologies</p>
+              </motion.div>
+            </div>
+          )}
         </div>
       </motion.section>
 
