@@ -3,19 +3,29 @@ import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, User, Tag, ArrowLeft, MessageCircle, ThumbsUp, Share2 } from 'lucide-react';
 import apiClient from '../lib/api';
+import ImageGallery from '../components/ImageGallery';
+import { useAuth } from '../context/auth/authProvider';
 
 interface Post {
-  _id: string;
+  id: string;
   title: string;
   content: string;
   author: {
-    _id: string;
+    id: string;
     name: string;
+    email: string;
   };
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-  isPublic: boolean;
+  tags: Array<{
+    tag: {
+      id: string;
+      name: string;
+    };
+  }>;
+  images: string[] | null;
+  created_at: string;
+  updated_at: string;
+  is_public: boolean;
+  author_id: string;
 }
 
 const PostDetailPage: React.FC = () => {
@@ -23,12 +33,13 @@ const PostDetailPage: React.FC = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { session } = useAuth();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get(`/posts/${id}`);
+        const response = await apiClient.post(`/posts/${id}`, {user: session?.user});
         setPost(response.data);
       } catch (err) {
         console.error('Error fetching post:', err);
@@ -41,7 +52,7 @@ const PostDetailPage: React.FC = () => {
     if (id) {
       fetchPost();
     }
-  }, [id]);
+  }, [id, session?.user]);
 
   return (
     <div className="min-h-screen bg-[#202020] text-white transition-colors duration-200">
@@ -91,18 +102,18 @@ const PostDetailPage: React.FC = () => {
                 </div>
                 <div className="flex items-center">
                   <Calendar className="w-4 h-4 mr-2 text-[#31B4EF]" />
-                  <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                  <span>{new Date(post.created_at).toLocaleDateString()}</span>
                 </div>
                 {post.tags.length > 0 && (
                   <div className="flex items-center">
                     <Tag className="w-4 h-4 mr-2 text-[#31B4EF]" />
                     <div className="flex flex-wrap gap-1">
-                      {post.tags.map(tag => (
+                      {post.tags.map(tagObj => (
                         <span 
-                          key={tag}
+                          key={tagObj.tag.id}
                           className="bg-[#31B4EF]/20 text-[#31B4EF] text-xs px-2 py-1 rounded"
                         >
-                          {tag}
+                          {tagObj.tag.name}
                         </span>
                       ))}
                     </div>
@@ -121,6 +132,18 @@ const PostDetailPage: React.FC = () => {
                     {post.content}
                   </p>
                 </div>
+                
+                {/* Image Gallery */}
+                {post.images && post.images.length > 0 && (
+                  <motion.div 
+                    className="mt-8"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                  >
+                    <ImageGallery images={post.images} />
+                  </motion.div>
+                )}
               </motion.div>
               
               <motion.div 

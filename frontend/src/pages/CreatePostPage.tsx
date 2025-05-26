@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PenSquare, Eye, Lock, ArrowLeft, Hash } from 'lucide-react';
 import apiClient from '../lib/api';
 import { useAuth } from '../context/auth/authProvider';
+import ImageUpload from '../components/ImageUpload';
 
 interface FormData {
   title: string;
   content: string;
   tags: string;
   isPublic: boolean;
+  images: string[];
 }
 
 const CreatePostPage: React.FC = () => {
@@ -22,10 +24,44 @@ const CreatePostPage: React.FC = () => {
     title: '',
     content: '',
     tags: '',
-    isPublic: true
+    isPublic: true,
+    images: []
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+
+  // Load existing post data when in edit mode
+  useEffect(() => {
+    if (isEditMode && id) {
+      const loadPost = async () => {
+        setIsLoading(true);
+        try {
+          console.log(session?.user);
+          const response = await apiClient.post(`/posts/${id}`, {user: session?.user});
+          
+          const post = response.data;
+          
+          // Transform the data to match our form structure
+          setFormData({
+            title: post.title,
+            content: post.content,
+            tags: post.tags ? post.tags.map((tagObj: any) => tagObj.tag.name).join(', ') : '',
+            isPublic: post.is_public,
+            images: post.images || []
+          });
+        } catch (err) {
+          console.error('Error loading post:', err);
+          setError('Failed to load post data. Please try again.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      loadPost();
+    }
+  }, [isEditMode, id]);
 
   // Function to handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,7 +81,8 @@ const CreatePostPage: React.FC = () => {
         title: formData.title,
         content: formData.content,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        isPublic: formData.isPublic
+        isPublic: formData.isPublic,
+        images: formData.images
       };
 
       if (isEditMode) {
@@ -73,6 +110,11 @@ const CreatePostPage: React.FC = () => {
   // Function to handle radio button changes
   const handleVisibilityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, isPublic: e.target.value === 'public' }));
+  };
+
+  // Function to handle images change
+  const handleImagesChange = (images: string[]) => {
+    setFormData(prev => ({ ...prev, images }));
   };
 
   return (
@@ -110,116 +152,127 @@ const CreatePostPage: React.FC = () => {
               </motion.div>
             )}
 
-            <form onSubmit={handleSubmit}>
-              <div className="mb-5">
-                <label className="block text-gray-300 text-sm font-medium mb-2 flex items-center" htmlFor="title">
-                  Title
-                </label>
-                <input
-                  className="w-full bg-[#333333] border border-[#444444] rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#31B4EF] focus:border-transparent transition-all"
-                  id="title"
-                  name="title"
-                  type="text"
-                  placeholder="Enter a descriptive title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                />
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#31B4EF]"></div>
               </div>
-              <div className="mb-5">
-                <label className="block text-gray-300 text-sm font-medium mb-2 flex items-center" htmlFor="content">
-                  Content
-                </label>
-                <textarea
-                  className="w-full bg-[#333333] border border-[#444444] rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#31B4EF] focus:border-transparent transition-all h-40 resize-y"
-                  id="content"
-                  name="content"
-                  placeholder="Write your post content here..."
-                  value={formData.content}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-              <div className="mb-5">
-                <label className="block text-gray-300 text-sm font-medium mb-2 flex items-center" htmlFor="tags">
-                  <Hash className="w-4 h-4 mr-2 text-[#31B4EF]" />
-                  Tags (comma-separated)
-                </label>
-                <input
-                  className="w-full bg-[#333333] border border-[#444444] rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#31B4EF] focus:border-transparent transition-all"
-                  id="tags"
-                  name="tags"
-                  type="text"
-                  placeholder="e.g., react, typescript, webdev"
-                  value={formData.tags}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-gray-300 text-sm font-medium mb-2">
-                  Visibility
-                </label>
-                <div className="flex space-x-4">
-                  <label className="inline-flex items-center cursor-pointer">
-                    <input 
-                      type="radio" 
-                      className="sr-only" 
-                      name="visibility" 
-                      value="public" 
-                      checked={formData.isPublic}
-                      onChange={handleVisibilityChange} 
-                    />
-                    <div className={`w-5 h-5 mr-2 rounded-full border ${formData.isPublic ? 'border-[#31B4EF] bg-[#31B4EF]/20' : 'border-[#444444]'} flex items-center justify-center`}>
-                      {formData.isPublic && <div className="w-2.5 h-2.5 rounded-full bg-[#31B4EF]"></div>}
-                    </div>
-                    <div className="flex items-center">
-                      <Eye className={`w-4 h-4 mr-2 ${formData.isPublic ? 'text-[#31B4EF]' : 'text-gray-500'}`} />
-                      <span className={formData.isPublic ? 'text-white' : 'text-gray-500'}>Public</span>
-                    </div>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <div className="mb-5">
+                  <label className="block text-gray-300 text-sm font-medium mb-2 flex items-center" htmlFor="title">
+                    Title
                   </label>
-                  <label className="inline-flex items-center cursor-pointer">
-                    <input 
-                      type="radio" 
-                      className="sr-only" 
-                      name="visibility" 
-                      value="private" 
-                      checked={!formData.isPublic}
-                      onChange={handleVisibilityChange} 
-                    />
-                    <div className={`w-5 h-5 mr-2 rounded-full border ${!formData.isPublic ? 'border-[#31B4EF] bg-[#31B4EF]/20' : 'border-[#444444]'} flex items-center justify-center`}>
-                      {!formData.isPublic && <div className="w-2.5 h-2.5 rounded-full bg-[#31B4EF]"></div>}
-                    </div>
-                    <div className="flex items-center">
-                      <Lock className={`w-4 h-4 mr-2 ${!formData.isPublic ? 'text-[#31B4EF]' : 'text-gray-500'}`} />
-                      <span className={!formData.isPublic ? 'text-white' : 'text-gray-500'}>Private</span>
-                    </div>
-                  </label>
+                  <input
+                    className="w-full bg-[#333333] border border-[#444444] rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#31B4EF] focus:border-transparent transition-all"
+                    id="title"
+                    name="title"
+                    type="text"
+                    placeholder="Enter a descriptive title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    required
+                  />
                 </div>
-              </div>
-              <div className="flex items-center justify-end">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`bg-[#31B4EF] hover:bg-[#31B4EF]/90 text-white font-medium py-2 px-4 rounded-md focus:outline-none transition-all duration-200 flex items-center ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-                  type="submit"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      {isEditMode ? 'Update Post' : 'Create Post'}
-                    </>
-                  )}
-                </motion.button>
-              </div>
-            </form>
+                <div className="mb-5">
+                  <label className="block text-gray-300 text-sm font-medium mb-2 flex items-center" htmlFor="content">
+                    Content
+                  </label>
+                  <textarea
+                    className="w-full bg-[#333333] border border-[#444444] rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#31B4EF] focus:border-transparent transition-all h-40 resize-y"
+                    id="content"
+                    name="content"
+                    placeholder="Write your post content here..."
+                    value={formData.content}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                {/* Image Upload Section */}
+                <div className="mb-5">
+                  <ImageUpload
+                    images={formData.images}
+                    onImagesChange={handleImagesChange}
+                    maxImages={5}
+                  />
+                </div>
+                
+                <div className="mb-5">
+                  <label className="block text-gray-300 text-sm font-medium mb-2 flex items-center" htmlFor="tags">
+                    <Hash className="w-4 h-4 mr-2 text-[#31B4EF]" />
+                    Tags (comma-separated)
+                  </label>
+                  <input
+                    className="w-full bg-[#333333] border border-[#444444] rounded-md py-2 px-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#31B4EF] focus:border-transparent transition-all"
+                    id="tags"
+                    name="tags"
+                    type="text"
+                    placeholder="e.g., react, typescript, webdev"
+                    value={formData.tags}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="mb-6">
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    Visibility
+                  </label>
+                  <div className="flex space-x-4">
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input 
+                        type="radio" 
+                        className="sr-only" 
+                        name="visibility" 
+                        value="public" 
+                        checked={formData.isPublic}
+                        onChange={handleVisibilityChange} 
+                      />
+                      <div className={`w-5 h-5 mr-2 rounded-full border ${formData.isPublic ? 'border-[#31B4EF] bg-[#31B4EF]/20' : 'border-[#444444]'} flex items-center justify-center`}>
+                        {formData.isPublic && <div className="w-2.5 h-2.5 rounded-full bg-[#31B4EF]"></div>}
+                      </div>
+                      <div className="flex items-center">
+                        <Eye className={`w-4 h-4 mr-2 ${formData.isPublic ? 'text-[#31B4EF]' : 'text-gray-500'}`} />
+                        <span className={formData.isPublic ? 'text-white' : 'text-gray-500'}>Public</span>
+                      </div>
+                    </label>
+                    <label className="inline-flex items-center cursor-pointer">
+                      <input 
+                        type="radio" 
+                        className="sr-only" 
+                        name="visibility" 
+                        value="private" 
+                        checked={!formData.isPublic}
+                        onChange={handleVisibilityChange} 
+                      />
+                      <div className={`w-5 h-5 mr-2 rounded-full border ${!formData.isPublic ? 'border-[#31B4EF] bg-[#31B4EF]/20' : 'border-[#444444]'} flex items-center justify-center`}>
+                        {!formData.isPublic && <div className="w-2.5 h-2.5 rounded-full bg-[#31B4EF]"></div>}
+                      </div>
+                      <div className="flex items-center">
+                        <Lock className={`w-4 h-4 mr-2 ${!formData.isPublic ? 'text-[#31B4EF]' : 'text-gray-500'}`} />
+                        <span className={!formData.isPublic ? 'text-white' : 'text-gray-500'}>Private</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <motion.button
+                    type="submit"
+                    disabled={isSubmitting}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-[#31B4EF] hover:bg-[#31B4EF]/90 text-white font-medium py-2 px-6 rounded-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                        {isEditMode ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      isEditMode ? 'Update Post' : 'Create Post'
+                    )}
+                  </motion.button>
+                </div>
+              </form>
+            )}
           </div>
         </motion.div>
       </div>

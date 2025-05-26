@@ -3,14 +3,15 @@ import apiClient from '../lib/api';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpen, Code, Tag, Users, TrendingUp, ChevronRight } from 'lucide-react';
+import ImageGallery from '../components/ImageGallery';
 
 // Blog post interface
 interface Post {
-  _id: string;
+  id: string;
   title: string;
   content: string;
   author: {
-    _id: string;
+    id: string;
     name: string;
   } | null;
   tags: Array<{
@@ -19,9 +20,10 @@ interface Post {
       name: string;
     };
   }>;
-  createdAt: string;
-  updatedAt: string;
-  isPublic: boolean;
+  images: string[] | null;
+  created_at: string;
+  updated_at: string;
+  is_public: boolean;
 }
 
 const HomePage: React.FC = () => {
@@ -263,13 +265,13 @@ const HomePage: React.FC = () => {
               >
                 {filteredPosts.map(post => (
                   <motion.div 
-                    key={post._id}
+                    key={post.id}
                     variants={itemVariants}
                     whileHover={{ y: -5, transition: { duration: 0.2 } }}
                     className="bg-[#2A2A2A] rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 border border-[#444444]"
                   >
                     <div className="p-6">
-                      <Link to={`/post/${post._id}`}>
+                      <Link to={`/post/${post.id}`}>
                         <h3 className="text-xl font-semibold mb-2 hover:text-[#31B4EF] transition-colors">
                           {post.title}
                         </h3>
@@ -277,10 +279,18 @@ const HomePage: React.FC = () => {
                       <p className="text-gray-400 mb-4 line-clamp-3">
                         {post.content.substring(0, 150)}...
                       </p>
+                      
+                      {/* Display images if available */}
+                      {post.images && post.images.length > 0 && (
+                        <div className="mb-4">
+                          <ImageGallery images={post.images} />
+                        </div>
+                      )}
+                      
                       <div className="flex flex-wrap gap-1 mb-3">
                         {post.tags.map(t => (
                           <span 
-                            key={`${post._id}-${t.tag.name}`}
+                            key={`${post.id}-${t.tag.name}`}
                             className="inline-block bg-[#333333] rounded-md px-3 py-1 text-xs font-semibold text-gray-300"
                           >
                             {t.tag.name}
@@ -289,10 +299,10 @@ const HomePage: React.FC = () => {
                       </div>
                       <div className="flex justify-between items-center text-sm text-gray-500">
                         <span>By {post.author?.name || 'Unknown Author'}</span>
-                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                        <span>{new Date(post.created_at).toLocaleDateString()}</span>
                       </div>
                       <Link 
-                        to={`/post/${post._id}`}
+                        to={`/post/${post.id}`}
                         className="mt-4 inline-flex items-center text-[#31B4EF] hover:underline"
                       >
                         Read more

@@ -42,6 +42,7 @@ export interface Database {
           content: string
           author_id: string
           is_public: boolean
+          images: string[] | null
           created_at: string
           updated_at: string
         }
@@ -51,6 +52,7 @@ export interface Database {
           content: string
           author_id: string
           is_public?: boolean
+          images?: string[] | null
           created_at?: string
           updated_at?: string
         }
@@ -60,6 +62,7 @@ export interface Database {
           content?: string
           author_id?: string
           is_public?: boolean
+          images?: string[] | null
           created_at?: string
           updated_at?: string
         }

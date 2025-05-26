@@ -14,6 +14,7 @@ interface Post {
     name: string;
   };
   tags: string[];
+  images: string[] | null;
   createdAt: string;
   updatedAt: string;
   isPublic: boolean;
@@ -35,10 +36,29 @@ const MyPostsPage: React.FC = () => {
       }
 
       try {
-        setLoading(true);
-        // Assuming there's an API endpoint for fetching the current user's posts
-        const response = await apiClient.get('/posts/my-posts');
-        setPosts(response.data);
+        const myPostData = {
+          user: session.user,
+        };
+  
+        
+        const response = await apiClient.post('/posts/my-posts',myPostData);
+        // Transform the response data to match our component expectations
+        const transformedPosts = response.data.map((post: any) => ({
+          _id: post.id,
+          title: post.title,
+          content: post.content,
+          author: {
+            _id: post.author_id,
+            name: 'Author' // Since author name isn't in the response
+          },
+          tags: post.tags.map((tagObj: any) => tagObj.tag.name),
+          images: post.images || null,
+          createdAt: post.created_at,
+          updatedAt: post.updated_at,
+          isPublic: post.is_public
+        }));
+        setPosts(transformedPosts);
+        
       } catch (err) {
         console.error('Error fetching posts:', err);
         setError('Failed to load your posts. Please try again later.');

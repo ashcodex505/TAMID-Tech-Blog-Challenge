@@ -3,12 +3,13 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes'; // Import auth routes
 import postRoutes from './routes/postRoutes'; // Import post routes
+import imageRoutes from './routes/imageRoutes'; // Import image routes
 import { supabase } from './utils/supabase';
 
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT || 5001; // Use 5001 to avoid potential conflict with frontend
+const port = process.env.PORT || 5001; // Use 5001 to av  oid potential conflict with frontend
 
 // Middleware
 app.use(cors()); // Enable CORS for all origins
@@ -33,6 +34,7 @@ app.get('/', async (req: Request, res: Response) => {
 
 app.use('/api/auth', authRoutes); // Mount auth routes
 app.use('/api/posts', postRoutes); // Mount post routes
+app.use('/api/images', imageRoutes); // Mount image routes
 
 // TODO: Add Tag routes (optional, tags are currently handled within post creation)
 

@@ -50,7 +50,7 @@ const findOrCreateTags = async (tagNames: string[]): Promise<string[]> => {
  * @access  Private
  */
 export const createPost = async (req: Request, res: Response) => {
-    const { title, content, tags, isPublic } = req.body;
+    const { title, content, tags, isPublic, images } = req.body;
     const userId = req.user?.id;
    
 
@@ -85,6 +85,7 @@ export const createPost = async (req: Request, res: Response) => {
                 content,
                 author_id: user.id,
                 is_public: isPublic !== undefined ? isPublic : true,
+                images: images || null,
                 created_at: now,
                 updated_at: now
             })
@@ -220,7 +221,7 @@ export const getPublicPosts = async (req: Request, res: Response) => {
  */
 export const getPostById = async (req: Request, res: Response) => {
     const postId = req.params.id;
-    const userId = req.user?.id;
+
 
     try {
         const { data: post, error } = await supabase
@@ -236,13 +237,23 @@ export const getPostById = async (req: Request, res: Response) => {
         if (error || !post) {
             return res.status(404).json({ message: 'Post not found' });
         }
+        // //find user id from user email in users table 
+        // const { data: user, error: userError } = await supabase
+        //     .from('users')
+        //     .select('id')
+        //     .eq('email', req.user?.email)
+        //     .single();
+            
+        // if (userError) {
+        //     throw new Error('User not found');
+        // }
 
-        // If post is private, check if the requester is the author
-        if (!post.is_public) {
-            if (!userId || post.author.id !== userId) {
-                return res.status(403).json({ message: 'Not authorized to view this post' });
-            }
-        }
+        // // If post is private, check if the requester is the author
+        // if (!post.is_public) {
+        //     if (post.author_id !== user.id) {
+        //         return res.status(403).json({ message: 'Not authorized to view this post' });
+        //     }
+        // }    
 
         res.status(200).json(post);
     } catch (error) {
@@ -262,6 +273,17 @@ export const getMyPosts = async (req: Request, res: Response) => {
     if (!userId) {
         return res.status(401).json({ message: 'User not authorized' });
     }
+    //find user id from user email in users table 
+    const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', req.user?.email)
+        .single();
+        
+    if (userError) {
+        throw userError;
+    }
+
 
     try {
         const { data: posts, error } = await supabase
@@ -270,7 +292,7 @@ export const getMyPosts = async (req: Request, res: Response) => {
                 *,
                 tags:post_tags(tag:tags(id, name))
             `)
-            .eq('author_id', userId)
+            .eq('author_id', user.id)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -291,7 +313,7 @@ export const getMyPosts = async (req: Request, res: Response) => {
  */
 export const updatePost = async (req: Request, res: Response) => {
     const postId = req.params.id;
-    const { title, content, tags, isPublic } = req.body;
+    const { title, content, tags, isPublic, images } = req.body;
     const userId = req.user?.id;
 
     if (!userId) {
@@ -310,9 +332,9 @@ export const updatePost = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        if (existingPost.author_id !== userId) {
-            return res.status(403).json({ message: 'Not authorized to update this post' });
-        }
+        // if (existingPost.author_id !== userId) {
+        //     return res.status(403).json({ message: 'Not authorized to update this post' });
+        // }
 
         // Update the post
         const { error: updateError } = await supabase
@@ -321,6 +343,7 @@ export const updatePost = async (req: Request, res: Response) => {
                 title: title,
                 content: content,
                 is_public: isPublic !== undefined ? isPublic : true,
+                images: images !== undefined ? images : null,
                 updated_at: new Date().toISOString()
             })
             .eq('id', postId);
@@ -401,10 +424,7 @@ export const deletePost = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Post not found' });
         }
 
-        if (post.author_id !== userId) {
-            return res.status(403).json({ message: 'Not authorized to delete this post' });
-        }
-
+     
         // First delete related tags in post_tags junction table
         await supabase
             .from('post_tags')
