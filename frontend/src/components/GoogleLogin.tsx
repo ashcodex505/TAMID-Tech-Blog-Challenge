@@ -1,33 +1,33 @@
 import { useCallback, useEffect } from "react";
 import { supabase } from "../context/auth/supabaseClient";
 import { useAuth } from "../context/auth/authProvider";
+import { useNavigate } from "react-router-dom";
 
 const GoogleLogin = () => {
   const { session } = useAuth();
 
-  // Get base URL for redirect
-  //import.meta.env.VITE_ENV_STATE === "development"? "http://localhost:5173": 
-  const baseUrl ="https://tamid-tech-blog-challenge.vercel.app";
+  const navigate = useNavigate();
+
 
   // Redirect to saved path or default to home
-  const getRedirectUrl = useCallback(() => {
+  const getRedirectPath = useCallback(() => {
     const savedPath = localStorage.getItem("redirectAfterLogin");
     // If there's a saved path, use it and clear storage
     if (savedPath) {
       localStorage.removeItem("redirectAfterLogin");
-      return `${baseUrl}${savedPath}`;
+      return savedPath;
     }
     // Otherwise default to home
-    return `${baseUrl}/auth/Home`;
-  }, [baseUrl]);
+
+    return "/";
+  }, []);
+
 
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: getRedirectUrl(),
-        },
+        // Remove redirectTo to let Supabase handle the default OAuth flow
       });
 
       if (error) throw error;
@@ -39,9 +39,10 @@ const GoogleLogin = () => {
   // If already logged in, redirect appropriately
   useEffect(() => {
     if (session) {
-      window.location.href = getRedirectUrl();
+      const redirectPath = getRedirectPath();
+      navigate(redirectPath);
     }
-  }, [session, getRedirectUrl]);
+  }, [session, getRedirectPath, navigate]);
 
   return (
     <div className="flex flex-col items-center">
