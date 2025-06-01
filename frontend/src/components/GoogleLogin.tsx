@@ -6,10 +6,8 @@ const GoogleLogin = () => {
   const { session } = useAuth();
 
   // Get base URL for redirect
-  const baseUrl =
-    import.meta.env.VITE_ENV_STATE === "development"
-      ? "http://localhost:5173"
-      : "https://tamid-tech-blog-challenge.vercel.app";
+  //import.meta.env.VITE_ENV_STATE === "development"? "http://localhost:5173": 
+  const baseUrl ="https://tamid-tech-blog-challenge.vercel.app";
 
   // Redirect to saved path or default to home
   const getRedirectUrl = useCallback(() => {
