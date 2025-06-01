@@ -20,7 +20,7 @@ const GoogleLogin = () => {
       return `${baseUrl}${savedPath}`;
     }
     // Otherwise default to home
-    return `${baseUrl}/`;
+    return `${baseUrl}/auth/Home`;
   }, [baseUrl]);
 
   const handleGoogleLogin = async () => {
