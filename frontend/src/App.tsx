@@ -24,6 +24,7 @@ function App() {
           
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/auth/Home" element={<HomePage />}/>
             <Route path="/create-post" element={<CreatePostPage />} />
             <Route path="/edit-post/:id" element={<CreatePostPage />} />
             <Route path="/my-posts" element={<MyPostsPage />} />

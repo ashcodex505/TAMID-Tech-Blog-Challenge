@@ -5,7 +5,9 @@ import { useNavigate } from "react-router-dom";
 
 const GoogleLogin = () => {
   const { session } = useAuth();
+
   const navigate = useNavigate();
+
 
   // Redirect to saved path or default to home
   const getRedirectPath = useCallback(() => {
@@ -16,8 +18,10 @@ const GoogleLogin = () => {
       return savedPath;
     }
     // Otherwise default to home
+
     return "/";
   }, []);
+
 
   const handleGoogleLogin = async () => {
     try {
