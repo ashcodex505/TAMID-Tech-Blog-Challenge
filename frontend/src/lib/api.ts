@@ -1,7 +1,23 @@
 import axios from 'axios';
 import { supabase } from '../context/auth/supabaseClient';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api'; // Use import.meta.env for Vite
+// Get the API base URL with better production handling
+const getApiBaseUrl = () => {
+  // Use environment variable if available
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  // In production, use absolute URL (replace with your actual backend URL)
+  if (import.meta.env.PROD) {
+    return 'https://tamid-tech-blog-backend-challenge.vercel.app/api';
+  }
+  
+  // Development fallback
+  return 'http://localhost:5001/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
