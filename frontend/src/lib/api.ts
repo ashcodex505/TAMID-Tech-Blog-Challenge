@@ -8,10 +8,7 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_BASE_URL;
   }
   
-  // In production, use absolute URL (replace with your actual backend URL)
-  if (import.meta.env.PROD) {
-    return 'https://tamid-tech-blog-backend-challenge.vercel.app/api';
-  }
+  
   
   // Development fallback
   return 'http://localhost:5001/api';
