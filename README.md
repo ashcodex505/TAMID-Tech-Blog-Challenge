@@ -1,12 +1,12 @@
 # TAMID Tech Blog
 
-A modern, full-stack blog platform built for the TAMID organization, featuring user authentication, image uploads, responsive design, and comprehensive content management capabilities.
+A modern, full-stack blog platform built for the TAMID Tech Challenge, featuring user authentication, image uploads, responsive design, and comprehensive content management capabilities.
 
 ![TAMID Tech Blog](https://img.shields.io/badge/TAMID-Tech%20Blog-31B4EF?style=for-the-badge&logo=react)
 
 ## 🚀 Live Demo
 
-- **Frontend**: Deployed on [Vercel](https://vercel.com)
+- **Frontend**: Deployed on [Vercel](https://vercel.com) at https://tamid-tech-blog-challenge.vercel.app
 - **Backend API**: Deployed on [Vercel](https://vercel.com)
 - **Database**: [Supabase](https://supabase.com)
 
