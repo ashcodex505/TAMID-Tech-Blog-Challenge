@@ -12,18 +12,18 @@ A modern, full-stack blog platform built for the TAMID Tech Challenge, featuring
 
 ## 📋 Table of Contents
 
-- [Overview](#overview)
-- [Technologies Used](#technologies-used)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Installation & Setup](#installation--setup)
-- [API Documentation](#api-documentation)
-- [Database Schema](#database-schema)
-- [Development Process](#development-process)
-- [Challenges Faced](#challenges-faced)
-- [Future Enhancements](#future-enhancements)
-- [Contributing](#contributing)
+- [🎯 Overview](#-overview)
+- [🛠 Technologies Used](#-technologies-used)
+- [🏗 Architecture](#-architecture)
+- [✨ Features](#-features)
+- [📁 Project Structure](#-project-structure)
+- [🚀 Installation & Setup](#-installation--setup)
+- [📚 API Documentation](#-api-documentation)
+- [🗄 Database Schema](#-database-schema)
+- [💻 Development Process](#-development-process)
+- [🚧 Challenges Faced](#-challenges-faced)
+- [🔮 Future Enhancements](#-future-enhancements)
+- [🤝 Contributing](#-contributing)
 
 ## 🎯 Overview
 
