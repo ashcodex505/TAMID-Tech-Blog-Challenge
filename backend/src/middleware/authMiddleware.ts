@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../utils/supabase';
 
-// Extend Express Request type to include 'user' property
+// Extended Express Request type to include 'user' property
 declare global {
   namespace Express {
     interface Request {

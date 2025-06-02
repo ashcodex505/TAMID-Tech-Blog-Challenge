@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 
-// Import the compiled JavaScript routes (they export as default)
+// Imported the compiled JavaScript routes 
 const authRoutes = require('../dist/routes/authRoutes').default;
 const postRoutes = require('../dist/routes/postRoutes').default;
 const imageRoutes = require('../dist/routes/imageRoutes').default;
