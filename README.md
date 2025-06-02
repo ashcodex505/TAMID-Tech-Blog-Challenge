@@ -27,19 +27,19 @@ A modern, full-stack blog platform built for the TAMID Tech Challenge, featuring
 
 ## 🎯 Overview
 
-The TAMID Tech Blog is a sophisticated blogging platform designed specifically for the TAMID organization. It provides a seamless experience for users to create, share, and discover technical content while maintaining a professional and modern interface that reflects TAMID's brand identity.
+The TAMID Tech Blog is a full-stack blogging platform I built for the TAMID Tech Challenge. This blog app includes features such as the ability for a user to upload images, assign tags, make descriptions & titles, and filter out the blogs by tags. The home page is dynamic as well as the category cards update dynamically according to new tags made by the users. The Blog application has Google Auth configured meaning that all sign-ins are made through google using supabase's Google OAuth for extra security instead of storing passwords in the database. The entire application is also responsive meaning you can use the application on your phone, and everything is scaled appropriately. I spent a lot of time on this app especially configuring the supabase backend, object storage, auth, and trying to fix the vercel hosting issues for both backend and frontend. I learned a lot and gained a whole new view into full-stack development especially by using new UI libraries like framer-motion which made the UI animation sleek and clean. I have everything documented in this README.md. If you want to host the app yourself locally or if you’re interested in how I made the app feel free to explore this documentation file. Hopefully you like it 😁![image](https://github.com/user-attachments/assets/90e81f07-1bcb-44c2-afe0-582184b3d24a)
+ 
 
 ### Key Highlights
 
 - **Full-Stack TypeScript Application** with type safety throughout
-- **Modern React Frontend** with Framer Motion animations
-- **RESTful Express.js Backend** with comprehensive API endpoints
+- **Modern React Frontend** with Framer Motion animations and tailwind css 
+- **RESTful Express.js Backend** with API endpoints
 - **Supabase Integration** for authentication, database, and file storage
-- **Responsive Design** optimized for all device sizes
-- **Image Upload & Management** with cloud storage
+- **Responsive Design** optimized for all device sizes (mobile and desktop) 
+- **Image Upload & Management** with cloud storage using supabase
 - **Tag-based Content Organization** for easy discovery
-- **Protected Routes** with JWT authentication
-- **Real-time User Experience** with optimistic updates
+- **Protected Routes** with supabase access tokens to enable authorization of pages logged in and logged out users can access
 
 ## 🛠 Technologies Used
 
@@ -52,7 +52,6 @@ The TAMID Tech Blog is a sophisticated blogging platform designed specifically f
 - **Framer Motion** - Smooth animations and transitions
 - **Lucide React** - Beautiful, customizable icons
 - **Axios** - HTTP client for API requests
-- **Zustand** - Lightweight state management (configured but not actively used)
 
 ### Backend
 - **Node.js** - JavaScript runtime environment
@@ -69,8 +68,7 @@ The TAMID Tech Blog is a sophisticated blogging platform designed specifically f
   - PostgreSQL database
   - Authentication & user management
   - File storage (images)
-  - Real-time subscriptions
-  - Row Level Security (RLS)
+  - Row Level Security (RLS) policies
 
 ### Deployment & Hosting
 - **Vercel** - Frontend and backend deployment
@@ -78,7 +76,7 @@ The TAMID Tech Blog is a sophisticated blogging platform designed specifically f
 - **GitHub** - Version control and CI/CD integration
 
 ### Development Tools
-- **ESLint** - Code linting and quality assurance
+- **ESLint** - Code linting and quality assurance (Very useful)
 - **PostCSS** - CSS processing
 - **Autoprefixer** - CSS vendor prefixing
 - **ts-node-dev** - TypeScript development server
@@ -94,7 +92,7 @@ The application follows a modern full-stack architecture with clear separation o
 │  • Components   │◄──►│  • Controllers  │◄──►│  • PostgreSQL   │
 │  • Pages        │    │  • Routes       │    │  • Auth         │
 │  • Context      │    │  • Middleware   │    │  • Storage      │
-│  • Hooks        │    │  • Utils        │    │  • Real-time    │
+│  • Hooks        │    │  • Utils        │    │                 │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -104,7 +102,7 @@ The frontend follows a component-based architecture with:
 
 - **Pages**: Route-level components (`HomePage`, `CreatePostPage`, etc.)
 - **Components**: Reusable UI components (`Navbar`, `ImageUpload`, etc.)
-- **Context**: Authentication state management with React Context
+- **Context**: Authentication state management with React Context for authorization of users
 - **Hooks**: Custom hooks for data fetching and state management
 - **Utils**: API client configuration and helper functions
 
@@ -114,7 +112,7 @@ The backend implements a RESTful API with:
 
 - **Controllers**: Business logic for handling requests
 - **Routes**: API endpoint definitions and middleware application
-- **Middleware**: Authentication, CORS, and error handling
+- **Middleware**: Authentication, CORS, and error handling (CORS meaning that if a another website tries accessing the database CORS will not allow it and only allow specified websites) 
 - **Utils**: Database connection and utility functions
 - **Types**: TypeScript type definitions
 
@@ -122,7 +120,7 @@ The backend implements a RESTful API with:
 
 ### 🔐 Authentication & User Management
 - **Supabase Authentication** with email/password
-- **JWT Token Management** with automatic refresh
+- **Token Management** with automatic refresh
 - **Protected Routes** requiring authentication
 - **User Profile Management** with automatic sync
 - **Session Persistence** across browser sessions
@@ -344,98 +342,6 @@ The application will be available at:
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:5001`
 
-## 📚 API Documentation
-
-### Authentication Endpoints
-
-#### Sync User
-```http
-POST /api/auth/sync-user
-Authorization: Bearer <jwt_token>
-```
-Synchronizes Supabase authenticated user with local database.
-
-#### Get Current User
-```http
-GET /api/auth/me
-Authorization: Bearer <jwt_token>
-```
-Retrieves current user profile information.
-
-### Blog Post Endpoints
-
-#### Get All Public Posts
-```http
-GET /api/posts
-Query Parameters:
-  - tag: Filter by tag name
-  - authorName: Filter by author name
-  - title: Search in post titles
-```
-
-#### Get Post by ID
-```http
-GET /api/posts/:id
-```
-
-#### Create New Post
-```http
-POST /api/posts
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-
-{
-  "title": "Post Title",
-  "content": "Post content...",
-  "tags": ["tag1", "tag2"],
-  "isPublic": true,
-  "images": ["image_url1", "image_url2"]
-}
-```
-
-#### Update Post
-```http
-PUT /api/posts/:id
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-
-{
-  "title": "Updated Title",
-  "content": "Updated content...",
-  "tags": ["updated_tag"],
-  "isPublic": false
-}
-```
-
-#### Delete Post
-```http
-DELETE /api/posts/:id
-Authorization: Bearer <jwt_token>
-```
-
-#### Get User's Posts
-```http
-GET /api/posts/my-posts
-Authorization: Bearer <jwt_token>
-```
-
-### Image Upload Endpoints
-
-#### Upload Image
-```http
-POST /api/images/upload
-Authorization: Bearer <jwt_token>
-Content-Type: multipart/form-data
-
-Form Data:
-  - image: File (max 5MB, image formats only)
-```
-
-#### Delete Image
-```http
-DELETE /api/images/:fileName
-Authorization: Bearer <jwt_token>
-```
 
 ## 🗄 Database Schema
 
@@ -471,11 +377,11 @@ The application uses a PostgreSQL database hosted on Supabase with the following
 
 The development of this blog platform was guided by several key principles:
 
-1. **Type Safety First**: Extensive use of TypeScript throughout the stack
+1. **Type Safety First**: Extensive use of TypeScript throughout the stack so that I can keep track of what variable is what (VERY HARD TO DO IN JAVASCRIPT)
 2. **Component Reusability**: Modular React components for maintainability
 3. **Performance Optimization**: Lazy loading, optimistic updates, and efficient queries
 4. **User Experience**: Smooth animations, loading states, and intuitive navigation
-5. **Security**: JWT authentication, input validation, and secure file uploads
+5. **Security**: token authentication, input validation, and secure file uploads with multer
 
 ### Code Organization
 
@@ -512,52 +418,30 @@ The backend implements clean architecture principles:
 
 ### 1. Authentication Integration
 
-**Challenge**: Integrating Supabase authentication with custom backend API while maintaining security.
+**Challenge**: Integrating Supabase authentication with custom backend API in a production environment while maintaining security.
 
-**Solution**: Implemented JWT token verification middleware that validates Supabase tokens and syncs user data with the local database. This approach provides the flexibility of custom user management while leveraging Supabase's robust authentication system.
+**Solution**: This was a bit of tedious task in my opinion as I had the authentication set up on my local machine, but it wasn’t working on vercel which I was very confused with at first. But the solution was actually very simple it was basically having envs for the BASE_URL for the backend api route so all I had to do was in vercel in the env section I just had to change those envs. The same thing I had to do with Google cloud console and configure the redirect URLs and do it in supabase as well (which took me a bit of time to notice). Also, another thing was that the redirect url in the code had to be saved to local storage that way all the application had to do was getItem in localStorage and would have the link ready and redirect to that.
 
-```typescript
-// Authentication middleware implementation
-export const protect = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  
-  if (error || !user) {
-    return res.status(401).json({ message: 'Not authorized' });
-  }
-  
-  req.user = user;
-  next();
-};
-```
 
 ### 2. Image Upload and Management
 
 **Challenge**: Implementing a robust image upload system with progress tracking, validation, and cloud storage.
 
-**Solution**: Created a comprehensive image upload component with:
+**Solution**: I had to create an image upload component with:
 - File type and size validation
 - Progress tracking during upload
 - Preview functionality with removal options
 - Integration with Supabase Storage for cloud hosting
+- Very hard to do especially configuring wit supabase storage buckets had to look through supabase documentation to figure it out
 
-### 3. State Management Complexity
-
-**Challenge**: Managing complex state across multiple components while maintaining performance.
-
-**Solution**: Implemented a hybrid approach using React Context for authentication state and local component state for UI interactions. This keeps the global state minimal while providing necessary data sharing.
+  
 
 ### 4. Responsive Design Implementation
 
 **Challenge**: Creating a consistent, responsive design that works across all device sizes.
 
-**Solution**: Utilized Tailwind CSS's responsive utilities with a mobile-first approach, implementing custom breakpoints and flexible grid layouts that adapt to different screen sizes.
+**Solution**: Utilized Tailwind CSS's responsive utilities with a mobile-first approach, implementing custom breakpoints and flexible grid layouts that adapt to different screen sizes. Used keywords such as md: sm: and lg: to do this. Sort of annoying to have to format everything on the website since I was using framer-motion libraries as well.
 
-### 5. Real-time User Experience
-
-**Challenge**: Providing immediate feedback for user actions while ensuring data consistency.
-
-**Solution**: Implemented optimistic updates for UI interactions combined with proper error handling and rollback mechanisms when server operations fail.
 
 ## 🔮 Future Enhancements
 
@@ -584,13 +468,6 @@ Given more time and resources, the following features would enhance the platform
 - **Like/Reaction System**: User engagement metrics
 - **Newsletter Subscription**: Email notifications for new content
 
-### 4. Administrative Features
-- **Admin Dashboard**: Content moderation and user management
-- **Analytics**: Post views, user engagement metrics
-- **Content Moderation**: Automated and manual content review
-- **User Roles**: Different permission levels (admin, editor, author)
-- **Bulk Operations**: Mass content management tools
-
 ### 5. Technical Improvements
 - **Progressive Web App**: Offline reading capabilities
 - **Performance Optimization**: Image lazy loading, code splitting
@@ -607,7 +484,7 @@ Given more time and resources, the following features would enhance the platform
 
 ## 🤝 Contributing
 
-This project was developed as part of the TAMID Tech Track application process. The codebase demonstrates proficiency in modern web development technologies and best practices.
+This project was developed as part of the TAMID Tech Track application process. This codebase demonstrates my proficiency in modern web development technologies and best practices. Hopefully you enjoyed reading through this :) 
 
 ### Code Quality Standards
 
@@ -617,29 +494,16 @@ This project was developed as part of the TAMID Tech Track application process. 
 - **Error Handling**: Comprehensive error catching and user feedback
 - **Security**: Input validation and authentication checks
 
-### Development Guidelines
-
-1. Follow the established project structure
-2. Maintain TypeScript type safety
-3. Write reusable, modular components
-4. Implement proper error handling
-5. Ensure responsive design compatibility
-6. Document complex functionality
-
 ---
-
-## 📄 License
-
-This project is developed for educational purposes as part of the TAMID Tech Track application.
 
 ## 🙏 Acknowledgments
 
 - **TAMID Organization** for providing the opportunity to build this project
-- **Supabase** for the excellent backend-as-a-service platform
+- **Supabase** for the excellent backend-as-a-service platform (really grateful for this service honestly) 
 - **Vercel** for seamless deployment and hosting
 - **React Community** for the amazing ecosystem of tools and libraries
 
 ---
 
-**Built with ❤️ for TAMID**
+**Built with ❤️ for TAMID Tech**
 
